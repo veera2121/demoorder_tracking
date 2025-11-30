@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Menu - Online Orders</title>
+
+<style>
+    body {
+        font-family: "Inter", sans-serif;
+        background: #f3f4f6;
+        margin: 0;
+        padding: 0;
+    }
+
+    h1 {
+        text-align: center;
+        margin: 20px 0;
+        font-size: 2rem;
+        color: #333;
+    }
+
+    /* ===== CATEGORY SCROLL BAR ===== */
+    .category-bar {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding: 12px 10px;
+        background: #fff;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-bottom: 1px solid #eee;
+    }
+
+    .category-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .category-bar button {
+        padding: 8px 18px;
+        background: #ff0080;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .category-bar button:hover {
+        background: #d9006f;
+    }
+
+    /* ===== MENU GRID ===== */
+    .menu-grid {
+        max-width: 900px;
+        margin: auto;
+        padding: 10px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 15px;
+    }
+
+    .menu-item {
+        background: white;
+        border-radius: 14px;
+        padding: 10px;
+        box-shadow: rgba(0,0,0,0.1) 0px 4px 12px;
+        border: 1px solid #eee;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .menu-img {
+        width: 100%;
+        height: 130px;
+        border-radius: 12px;
+        object-fit: cover;
+    }
+
+    .menu-name {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 8px 0 4px 0;
+        text-align: center;
+    }
+
+    .menu-price {
+        font-size: 0.95rem;
+        color: #ff0080;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .qty-add {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        gap: 5px;
+    }
+
+    input[type="number"] {
+        width: 45px;
+        padding: 6px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        text-align: center;
+        font-size: 13px;
+    }
+
+    button.add-btn {
+        background: #ff0080;
+        color: white;
+        border: none;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        cursor: pointer;
+        flex: 1;
+    }
+
+    button.add-btn:hover {
+        background: #d9006f;
+    }
+
+    /* ===== DESKTOP VIEW ===== */
+    @media (min-width: 700px) {
+        .menu-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .menu-item {
+            width: calc(50% - 15px);
+            flex-direction: row;
+            padding: 15px;
+        }
+
+        .menu-img {
+            width: 150px;
+            height: 120px;
+        }
+
+        .menu-name {
+            font-size: 1.2rem;
+        }
+
+        .menu-price {
+            font-size: 1.1rem;
+        }
+    }
+.cart-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+
+    background: #ff0080;
+    color: white;
+    padding: 12px 22px;
+    border-radius: 12px;
+    font-size: 16px;
+    text-decoration: none;
+
+    z-index: 9999;           /* ensures visible above everything */
+    display: block;
+
+    /* iPhone / Android bottom UI safe area fix */
+    padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+}
+
+/* Extra fix for very small mobile screens */
+@media (max-width: 450px) {
+    .cart-btn {
+        bottom: 10px;
+        right: 10px;
+        font-size: 14px;
+        padding: 10px 18px;
+    }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Our Menu</h1>
+
+<!-- ===== CATEGORY SCROLL BAR ===== -->
+<div class="category-bar">
+    <button onclick="filterCategory('All')">All</button>
+    {% for c in categories %}
+        <button onclick="filterCategory('{{ c }}')">{{ c }}</button>
+    {% endfor %}
+</div>
+
+<!-- ===== MENU ITEMS ===== -->
+<div id="menu-container">
+    {% for category, items in menu_by_category.items() %}
+        <div class="category-title">{{ category }}</div>
+        <div class="menu-grid">
+            {% for item in items %}
+            <div class="menu-item" data-category="{{ category }}">
+                <img src="{{ item.image }}" class="menu-img" alt="{{ item.name }}">
+                <div class="menu-name">{{ item.name }}</div>
+                <div class="menu-price">₹{{ item.price }}</div>
+                <div class="qty-add">
+                    <input type="number" id="qty-{{ item.id }}" value="1" min="1">
+                    <button class="add-btn" onclick="addToCart({{ item.id }}, '{{ item.name }}', {{ item.price }})">
+                        Add
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+</div>
+
+<a href="/cart" class="cart-btn">🛒 Cart</a>
+
+<script>
+function addToCart(id, name, price) {
+    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    let qty = parseInt(document.getElementById("qty-" + id).value);
+
+    let existing = cart.find(item => item.id === id);
+    if (existing) {
+        existing.quantity += qty;
+    } else {
+        cart.push({ id, name, price, quantity: qty });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    alert(name + " added to cart!");
+}
+
+// ===== CATEGORY FILTER =====
+function filterCategory(cat) {
+    const items = document.querySelectorAll(".menu-item");
+    const titles = document.querySelectorAll(".category-title");
+
+    items.forEach(item => {
+        if (cat === "All" || item.dataset.category === cat) {
+            item.style.display = "flex";
+        } else {
+            item.style.display = "none";
+        }
+    });
+
+    titles.forEach(title => {
+        if (cat === "All" || title.textContent === cat) {
+            title.style.display = "block";
+        } else {
+            title.style.display = "none";
+        }
+    });
+}
+</script>
+
+</body>
+</html>

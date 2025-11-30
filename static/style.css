@@ -1,0 +1,14 @@
+/* static/style.css */
+body{ font-family: Inter, Poppins, Arial, sans-serif; background:#f5f7fb; color:#111; margin:0; padding:20px;}
+.container{ max-width:900px; margin:24px auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.06);}
+h1{ margin-top:0; color:#0b6;}
+.form-card input, .form-card textarea, .form-card select, .form-inline input { width:100%; padding:10px; margin:8px 0; border-radius:6px; border:1px solid #e4e7eb; }
+.form-inline { display:flex; gap:10px; margin-bottom:18px; }
+.form-inline input { flex:1; }
+button { background:#0b6; color:white; border:0; padding:10px 14px; border-radius:6px; cursor:pointer; }
+button:hover{ opacity:0.95; }
+.muted{ color:#666; margin-top:12px; }
+.orders-table{ width:100%; border-collapse:collapse; margin-top:12px;}
+.orders-table th, .orders-table td{ padding:8px 10px; border:1px solid #eee; text-align:left; font-size:14px;}
+.orders-table th{ background:#fafafa; }
+select { padding:8px; border-radius:6px; }
