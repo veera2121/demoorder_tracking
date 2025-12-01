@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from collections import defaultdict
+from sqlalchemy import or_, cast, String
+
+
 import json
 import os
 import requests
@@ -159,22 +162,29 @@ def place_order():
 
     db.session.commit()
 
-    return redirect(url_for("my_orders"))
+    return redirect(url_for("myorders"))
+
 
 
 # ------------------ TRACK ORDERS ------------------
 @app.route("/myorders", methods=["GET", "POST"])
-def my_orders():
+def myorders():
     orders = []
 
     if request.method == "POST":
-        phone = request.form.get("phone", "")
-        email = request.form.get("email", "")
+        phone = request.form.get("phone", "").strip()
+        email = request.form.get("email", "").strip()
 
+        query = Order.query
+
+        # Search by phone or email
         if phone:
-            orders = Order.query.filter_by(phone=phone).all()
+            query = query.filter(Order.phone == phone)
         elif email:
-            orders = Order.query.filter_by(email=email).all()
+            query = query.filter(Order.email == email)
+
+        # ORDER BY latest first (DESCENDING)
+        orders = query.order_by(Order.created_at.desc()).all()
 
     return render_template("myorders.html", orders=orders)
 
@@ -198,15 +208,6 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
-@app.route("/admin/dashboard")
-def admin_dashboard():
-    if not session.get("admin_logged_in"):
-        return redirect(url_for("admin_login"))
-
-    orders = Order.query.order_by(Order.id.desc()).all()
-    return render_template("admin_dashboard.html", orders=orders)
-
-
 @app.route("/admin/update_status/<int:order_db_id>", methods=["POST"])
 def update_status(order_db_id):
     if not session.get("admin_logged_in"):
@@ -217,6 +218,62 @@ def update_status(order_db_id):
     order.status = new_status
     db.session.commit()
     return redirect(url_for("admin_dashboard"))
+
+
+
+@app.route("/admin/dashboard", methods=["GET"])
+def admin_dashboard():
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
+
+    # ----- Filters -----
+    query = request.args.get("query", "").strip()
+    status_filter = request.args.get("status", "")
+    start_date = request.args.get("start_date", "")
+    end_date = request.args.get("end_date", "")
+
+    # ----- Pagination -----
+    page = int(request.args.get("page", 1))
+    per_page = 10  # items per page
+
+    orders_query = Order.query
+
+    # Search filter
+    if query:
+        orders_query = orders_query.filter(
+            or_(
+                Order.customer_name.contains(query),
+                Order.phone.contains(query),
+                Order.email.contains(query),
+                Order.order_id.contains(query)
+            )
+        )
+
+    # Status filter
+    if status_filter:
+        orders_query = orders_query.filter_by(status=status_filter)
+
+    # Date range filter
+    if start_date:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+        orders_query = orders_query.filter(Order.created_at >= start_dt)
+
+    if end_date:
+        end_dt = datetime.strptime(end_date + " 23:59:59", "%Y-%m-%d %H:%M:%S")
+        orders_query = orders_query.filter(Order.created_at <= end_dt)
+
+    # Pagination apply
+    orders = orders_query.order_by(Order.created_at.desc()).paginate(page=page, per_page=per_page)
+
+    return render_template(
+        "admin_dashboard.html",
+        orders=orders.items,
+        pagination=orders,
+        query=query,
+        status_filter=status_filter,
+        start_date=start_date,
+        end_date=end_date,
+    )
 
 
 # ------------------ API ------------------
