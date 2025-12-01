@@ -112,9 +112,18 @@ def menu_page():
 @app.route("/cart")
 def cart_page():
     return render_template("cart.html")
+# ------------------ orders place------------------
 
 @app.route("/place_order", methods=["POST"])
 def place_order():
+
+    # ===== DEBUGGING START =====
+    import pprint
+    print("\n\n================ DEBUG FORM DATA ================")
+    pprint.pprint(request.form.to_dict(flat=False))
+    print("================ END DEBUG ======================\n\n")
+    # ===== DEBUGGING END =====
+
     name = request.form.get("name")
     email = request.form.get("email")
     phone = request.form.get("phone")
@@ -141,6 +150,7 @@ def place_order():
 
     db.session.add(new_order)
     db.session.commit()
+
     new_order.order_id = generate_order_id(new_order.id)
     db.session.commit()
 
@@ -150,16 +160,20 @@ def place_order():
             price = float(prices[i])
         except:
             price = 0.0
+
         db.session.add(OrderItem(
             order_id=new_order.id,
             item_name=item_names[i],
             quantity=qty,
             price=price
         ))
+
     db.session.commit()
 
     flash(f"Order placed! OTP for delivery: {new_order.otp}", "success")
     return redirect(url_for("myorders"))
+
+
 
 @app.route("/myorders", methods=["GET", "POST"])
 def myorders():

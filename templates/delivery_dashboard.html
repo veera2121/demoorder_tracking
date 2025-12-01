@@ -4,6 +4,10 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Delivery Dashboard</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
   <style>
     body { font-family: "Inter", sans-serif; background: #f9fafb; margin: 0; padding: 0; }
     .container { max-width: 900px; margin: 20px auto; padding: 15px; }
@@ -19,14 +23,18 @@
     .flash-danger { background: #f8d7da; color: #a94442; }
     .assigned-person { margin-top: 10px; font-weight: 600; color: #ff5722; }
     .logout { margin-bottom: 15px; }
-    @media (max-width: 600px) {
-      .otp-form { flex-direction: column; }
-      .otp-form button { width: 100%; }
-    }
     .order-header { display: flex; justify-content: space-between; flex-wrap: wrap; }
     .order-header p { margin: 2px 0; }
     .call-btn { padding:4px 10px; background:#4caf50; color:white; border:none; border-radius:4px; cursor:pointer; }
     .call-btn:hover { background:#388e3c; }
+
+    /* Map container */
+    .map { width: 100%; height: 250px; margin-top: 10px; border-radius: 10px; }
+
+    @media (max-width: 600px) {
+      .otp-form { flex-direction: column; }
+      .otp-form button { width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -69,6 +77,11 @@
 
           <p><strong>Total Price:</strong> ₹{{ "%.2f"|format(o.total_price()) }}</p>
 
+          <!-- Leaflet Map -->
+          {% if o.latitude and o.longitude %}
+          <div id="map-{{ o.id }}" class="map"></div>
+          {% endif %}
+
           {% if o.delivery_person %}
             <p class="assigned-person">Assigned to: {{ o.delivery_person.name }}</p>
           {% else %}
@@ -76,7 +89,6 @@
           {% endif %}
 
           {% if o.status != 'Delivered' %}
-          <!-- OTP FORM TO MARK DELIVERED -->
           <form method="POST" class="otp-form" action="{{ url_for('delivery_dashboard') }}">
             <input type="hidden" name="order_id" value="{{ o.id }}">
             <input type="text" name="otp" placeholder="Enter OTP to confirm delivery" required>
@@ -89,5 +101,20 @@
       <p>No orders assigned to you.</p>
     {% endif %}
   </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    {% for o in orders %}
+      {% if o.latitude and o.longitude %}
+        var map{{ o.id }} = L.map('map-{{ o.id }}').setView([{{ o.latitude }}, {{ o.longitude }}], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map{{ o.id }});
+        L.marker([{{ o.latitude }}, {{ o.longitude }}]).addTo(map{{ o.id }}).bindPopup("{{ o.customer_name }}").openPopup();
+      {% endif %}
+    {% endfor %}
+  </script>
 </body>
 </html>

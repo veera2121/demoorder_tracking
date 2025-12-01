@@ -4,155 +4,28 @@
 <meta charset="UTF-8">
 <title>Menu - Online Orders</title>
 <style>
-    body {
-        font-family: "Inter", sans-serif;
-        background: #f3f4f6;
-        margin: 0;
-        padding: 0;
-    }
-
-    h1 {
-        text-align: center;
-        margin: 20px 0;
-        font-size: 2rem;
-        color: #333;
-    }
-
-    /* ===== CATEGORY SCROLL BAR ===== */
-    .category-bar {
-        display: flex;
-        gap: 12px;
-        overflow-x: auto;
-        white-space: nowrap;
-        padding: 12px 10px;
-        background: #fff;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        border-bottom: 1px solid #eee;
-    }
-
-    .category-bar button {
-        padding: 10px 22px;
-        background: #ff0080;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    .category-bar button:hover {
-        background: #d9006f;
-    }
-
-    /* ===== BIG MOBILE CARD VIEW ===== */
-    .menu-grid {
-        max-width: 600px;
-        margin: auto;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-    }
-
-    .menu-item {
-        background: white;
-        border-radius: 16px;
-        padding: 0;
-        box-shadow: rgba(0,0,0,0.12) 0px 4px 14px;
-        overflow: hidden;
-        border: 1px solid #eee;
-    }
-
-    .menu-img {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-    }
-
-    .menu-name {
-        font-size: 1.3rem;
-        font-weight: 700;
-        margin: 10px 15px 5px 15px;
-    }
-
-    .menu-price {
-        font-size: 1.2rem;
-        color: #ff0080;
-        font-weight: 600;
-        margin: 0 15px 15px 15px;
-    }
-
-    .qty-add {
-        display: flex;
-        align-items: center;
-        padding: 10px 15px 15px 15px;
-        gap: 10px;
-    }
-
-    input[type="number"] {
-        width: 60px;
-        padding: 8px;
-        border-radius: 8px;
-        border: 1px solid #ddd;
-        text-align: center;
-        font-size: 16px;
-    }
-
-    button.add-btn {
-        background: #ff0080;
-        color: white;
-        border: none;
-        padding: 12px 16px;
-        border-radius: 10px;
-        font-size: 16px;
-        cursor: pointer;
-        flex: 1;
-    }
-
-    button.add-btn:hover {
-        background: #d9006f;
-    }
-
-    /* ===== DESKTOP ===== */
-    @media (min-width: 700px) {
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .menu-img {
-            height: 150px;
-        }
-    }
-
-    /* CART BUTTON FIX */
-    .cart-btn {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: #ff0080;
-        color: white;
-        padding: 12px 22px;
-        border-radius: 12px;
-        font-size: 16px;
-        text-decoration: none;
-        z-index: 9999;
-        display: block;
-        padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
-    }
+body { font-family: "Inter", sans-serif; background: #f3f4f6; margin: 0; padding: 0; }
+h1 { text-align: center; margin: 20px 0; font-size: 2rem; color: #333; }
+.category-bar { display: flex; gap: 12px; overflow-x: auto; white-space: nowrap; padding: 12px 10px; background: #fff; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #eee; }
+.category-bar button { padding: 10px 22px; background: #ff0080; color: white; border: none; border-radius: 20px; font-weight: 600; cursor: pointer; }
+.category-bar button:hover { background: #d9006f; }
+.menu-grid { max-width: 600px; margin: auto; padding: 10px; display: flex; flex-direction: column; gap: 18px; }
+.menu-item { background: white; border-radius: 16px; padding: 0; box-shadow: rgba(0,0,0,0.12) 0px 4px 14px; overflow: hidden; border: 1px solid #eee; display: flex; flex-direction: column; }
+.menu-img { width: 100%; height: 200px; object-fit: cover; }
+.menu-name { font-size: 1.3rem; font-weight: 700; margin: 10px 15px 5px 15px; }
+.menu-price { font-size: 1.2rem; color: #ff0080; font-weight: 600; margin: 0 15px 15px 15px; }
+.qty-add { display: flex; align-items: center; padding: 10px 15px 15px 15px; gap: 10px; }
+input[type="number"] { width: 60px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center; font-size: 16px; }
+button.add-btn { background: #ff0080; color: white; border: none; padding: 12px 16px; border-radius: 10px; font-size: 16px; cursor: pointer; flex: 1; }
+button.add-btn:hover { background: #d9006f; }
+@media (min-width: 700px) { .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; } .menu-img { height: 150px; } }
+.cart-btn { position: fixed; bottom: 20px; right: 20px; background: #ff0080; color: white; padding: 12px 22px; border-radius: 12px; font-size: 16px; text-decoration: none; z-index: 9999; display: block; }
 </style>
-
-
 </head>
-
 <body>
 
 <h1>Our Menu</h1>
 
-<!-- ===== CATEGORY SCROLL BAR ===== -->
 <div class="category-bar">
     <button onclick="filterCategory('All')">All</button>
     {% for c in categories %}
@@ -160,7 +33,6 @@
     {% endfor %}
 </div>
 
-<!-- ===== MENU ITEMS ===== -->
 <div id="menu-container">
     {% for category, items in menu_by_category.items() %}
         <div class="category-title">{{ category }}</div>
@@ -172,9 +44,7 @@
                 <div class="menu-price">₹{{ item.price }}</div>
                 <div class="qty-add">
                     <input type="number" id="qty-{{ item.id }}" value="1" min="1">
-                    <button class="add-btn" onclick="addToCart({{ item.id }}, '{{ item.name }}', {{ item.price }})">
-                        Add
-                    </button>
+                    <button class="add-btn" onclick="addToCart({{ item.id }}, '{{ item.name }}', {{ item.price }})">Add</button>
                 </div>
             </div>
             {% endfor %}
@@ -185,41 +55,24 @@
 <a href="/cart" class="cart-btn">🛒 Cart</a>
 
 <script>
+let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
 function addToCart(id, name, price) {
-    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
     let qty = parseInt(document.getElementById("qty-" + id).value);
-
+    if(qty < 1) qty = 1;
     let existing = cart.find(item => item.id === id);
-    if (existing) {
-        existing.quantity += qty;
-    } else {
-        cart.push({ id, name, price, quantity: qty });
-    }
-
+    if(existing){ existing.quantity += qty; }
+    else { cart.push({ id, name, price, quantity: qty }); }
     localStorage.setItem("cart", JSON.stringify(cart));
     alert(name + " added to cart!");
+    document.getElementById("qty-" + id).value = 1;
 }
 
-// ===== CATEGORY FILTER =====
 function filterCategory(cat) {
     const items = document.querySelectorAll(".menu-item");
     const titles = document.querySelectorAll(".category-title");
-
-    items.forEach(item => {
-        if (cat === "All" || item.dataset.category === cat) {
-            item.style.display = "flex";
-        } else {
-            item.style.display = "none";
-        }
-    });
-
-    titles.forEach(title => {
-        if (cat === "All" || title.textContent === cat) {
-            title.style.display = "block";
-        } else {
-            title.style.display = "none";
-        }
-    });
+    items.forEach(item => { item.style.display = (cat === "All" || item.dataset.category === cat) ? "flex" : "none"; });
+    titles.forEach(title => { title.style.display = (cat === "All" || title.textContent === cat) ? "block" : "none"; });
 }
 </script>
 
