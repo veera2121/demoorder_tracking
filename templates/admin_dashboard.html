@@ -6,42 +6,47 @@
   <title>Admin Dashboard</title>
 
   <style>
-    .container { max-width: 1100px; margin: 20px auto; padding: 10px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
+    .container { max-width: 1300px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h1 { margin-bottom: 10px; }
+    a { text-decoration: none; color: #007bff; }
+    a:hover { text-decoration: underline; }
+    .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filters input, .filters select, .filters button { padding: 8px; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 8px; vertical-align: top; text-align: center; }
     th { background: #f0f0f0; }
-    .filters { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-    .filters input, .filters select { padding: 8px; font-size: 14px; }
+    ul { list-style: none; padding: 0; margin: 0; }
     .pagination { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
-    .pagination a { padding: 6px 12px; background: #eee; border: 1px solid #ccc; text-decoration: none; }
+    .pagination a { padding: 6px 12px; background: #eee; border: 1px solid #ccc; text-decoration: none; border-radius: 4px; }
+    .pagination a:hover { background: #ddd; }
+    button { padding: 5px 10px; cursor: pointer; border-radius: 4px; border: none; background: #007bff; color: #fff; }
+    button:hover { background: #0056b3; }
+    select { padding: 5px; }
+    form { margin: 0; }
+    small { color: #555; display: block; margin-top: 2px; }
   </style>
 </head>
 <body>
 
-<audio id="newOrderSound">
-  <source src="/static/sound.mp3" type="audio/mpeg">
-</audio>
-
 <div class="container">
   <h1>Admin Dashboard</h1>
-
-  <p><a href="{{ url_for('admin_logout') }}">Logout</a></p>
+  <p>
+    <a href="{{ url_for('admin_logout') }}">Logout</a> | 
+    <a href="{{ url_for('add_delivery_person') }}">Add Delivery Person</a>
+  </p>
 
   <!-- FILTER BAR -->
   <form method="GET" action="" class="filters">
-    <input type="text" name="query" placeholder="Search orders"
-           value="{{ query }}">
-
+    <input type="text" name="query" placeholder="Search orders" value="{{ query }}">
     <select name="status">
       <option value="">All Status</option>
       {% for s in ['Pending','Accepted','Processing','ontheway','Completed','Cancelled'] %}
         <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
       {% endfor %}
     </select>
-
     <input type="date" name="start_date" value="{{ start_date }}">
     <input type="date" name="end_date" value="{{ end_date }}">
-
     <button type="submit">Apply</button>
   </form>
 
@@ -53,26 +58,23 @@
           <th>Customer</th>
           <th>Items</th>
           <th>Qty × Price</th>
-          <th>Total Price</th>
+          <th>Total</th>
           <th>Status</th>
+          <th>Assign Delivery</th>
           <th>Placed</th>
           <th>Location</th>
           <th>Update Status</th>
         </tr>
       </thead>
       <tbody>
-
         {% for o in orders %}
         <tr>
-
           <td>{{ o.order_id }}</td>
-
           <td>
             {{ o.customer_name }}<br>
             {{ o.phone }}<br>
             {{ o.email }}
           </td>
-
           <td>
             <ul>
               {% for item in o.items %}
@@ -80,24 +82,31 @@
               {% endfor %}
             </ul>
           </td>
-
           <td>
             <ul>
               {% for item in o.items %}
-                {% set q = item.quantity|int %}
-                {% set p = item.price|float %}
-                {% set subtotal = q * p %}
-                <li>{{ q }} × ₹{{ "%.2f"|format(p) }} = ₹{{ "%.2f"|format(subtotal) }}</li>
+                {% set subtotal = item.quantity|int * item.price|float %}
+                <li>{{ item.quantity }} × ₹{{ "%.2f"|format(item.price) }} = ₹{{ "%.2f"|format(subtotal) }}</li>
               {% endfor %}
             </ul>
           </td>
-
           <td><strong>₹{{ "%.2f"|format(o.total_price()) }}</strong></td>
-
           <td>{{ o.status }}</td>
-
+          <td>
+            <form method="POST" action="{{ url_for('assign_delivery', order_id=o.id) }}">
+              <select name="delivery_person_id" required>
+                <option value="">Select</option>
+                {% for d in delivery_persons %}
+                  <option value="{{ d.id }}" {% if o.delivery_person_id == d.id %}selected{% endif %}>{{ d.name }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit">Assign</button>
+            </form>
+            {% if o.delivery_person %}
+              <small>Assigned: {{ o.delivery_person.name }}</small>
+            {% endif %}
+          </td>
           <td>{{ o.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-
           <td>
             {% if o.latitude and o.longitude %}
               <a href="https://www.google.com/maps?q={{ o.latitude }},{{ o.longitude }}" target="_blank">Map</a>
@@ -105,9 +114,8 @@
               N/A
             {% endif %}
           </td>
-
           <td>
-            <form method="POST" action="{{ url_for('update_status', order_db_id=o.id) }}">
+            <form method="POST" action="{{ url_for('update_status', order_id=o.id) }}">
               <select name="status">
                 {% for s in ['Pending','Accepted','Processing','ontheway','Completed','Cancelled'] %}
                   <option value="{{ s }}" {% if o.status == s %}selected{% endif %}>{{ s }}</option>
@@ -116,7 +124,6 @@
               <button type="submit">Update</button>
             </form>
           </td>
-
         </tr>
         {% endfor %}
       </tbody>
@@ -127,31 +134,14 @@
       {% if pagination.has_prev %}
         <a href="?page={{ pagination.prev_num }}&query={{ query }}&status={{ status_filter }}&start_date={{ start_date }}&end_date={{ end_date }}">⬅ Prev</a>
       {% endif %}
-
       {% if pagination.has_next %}
         <a href="?page={{ pagination.next_num }}&query={{ query }}&status={{ status_filter }}&start_date={{ start_date }}&end_date={{ end_date }}">Next ➡</a>
       {% endif %}
     </div>
-
   {% else %}
     <p>No orders found.</p>
   {% endif %}
 </div>
-
-<script>
-function checkOrders() {
-    fetch('/check-new-orders')
-        .then(r => r.json())
-        .then(data => {
-            if (data.new) {
-                document.getElementById("newOrderSound").play();
-                alert("🔔 New Order Arrived!");
-                location.reload();
-            }
-        });
-}
-setInterval(checkOrders, 5000);
-</script>
 
 </body>
 </html>

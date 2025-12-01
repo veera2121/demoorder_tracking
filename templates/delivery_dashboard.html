@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Delivery Dashboard</title>
+  <style>
+    body { font-family: "Inter", sans-serif; background: #f9fafb; margin: 0; padding: 0; }
+    .container { max-width: 900px; margin: 20px auto; padding: 15px; }
+    h1, h2, h4 { color: #333; margin: 5px 0; }
+    .order-card { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 15px; margin: 15px 0; box-shadow: rgba(0,0,0,0.05) 0px 2px 8px; }
+    .item-list li { background: #f5f5f5; padding: 8px; border-radius: 6px; margin: 5px 0; }
+    .otp-form { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .otp-form input { padding: 8px; border-radius: 6px; border: 1px solid #ccc; flex: 1; }
+    .otp-form button { padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+    .otp-form button:hover { background: #0d47a1; }
+    .flash { padding: 10px; margin-bottom: 15px; border-radius: 6px; }
+    .flash-success { background: #d0f0c0; color: #2e7d32; }
+    .flash-danger { background: #f8d7da; color: #a94442; }
+    .assigned-person { margin-top: 10px; font-weight: 600; color: #ff5722; }
+    .logout { margin-bottom: 15px; }
+    @media (max-width: 600px) {
+      .otp-form { flex-direction: column; }
+      .otp-form button { width: 100%; }
+    }
+    .order-header { display: flex; justify-content: space-between; flex-wrap: wrap; }
+    .order-header p { margin: 2px 0; }
+    .call-btn { padding:4px 10px; background:#4caf50; color:white; border:none; border-radius:4px; cursor:pointer; }
+    .call-btn:hover { background:#388e3c; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Delivery Dashboard</h1>
+    <p class="logout"><a href="{{ url_for('delivery_logout') }}">Logout</a></p>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if orders %}
+      {% for o in orders %}
+        <div class="order-card">
+          <div class="order-header">
+            <h2>Order ID: {{ o.order_id }}</h2>
+            <p>Status: <strong>{{ o.status }}</strong></p>
+          </div>
+
+          <!-- Customer info with clickable call button -->
+          <p><strong>Customer:</strong> {{ o.customer_name }} |
+            <a href="tel:{{ o.phone }}">
+              <button type="button" class="call-btn">📞 Call {{ o.phone }}</button>
+            </a> |
+            {{ o.email }}
+          </p>
+          <p><strong>Address:</strong> {{ o.address }}</p>
+
+          <h4>Items Ordered:</h4>
+          <ul class="item-list">
+            {% for item in o.items %}
+              <li>{{ item.item_name }} — Qty: {{ item.quantity }} — Price: ₹{{ "%.2f"|format(item.price) }}</li>
+            {% endfor %}
+          </ul>
+
+          <p><strong>Total Price:</strong> ₹{{ "%.2f"|format(o.total_price()) }}</p>
+
+          {% if o.delivery_person %}
+            <p class="assigned-person">Assigned to: {{ o.delivery_person.name }}</p>
+          {% else %}
+            <p class="assigned-person">Not assigned yet</p>
+          {% endif %}
+
+          {% if o.status != 'Delivered' %}
+          <!-- OTP FORM TO MARK DELIVERED -->
+          <form method="POST" class="otp-form" action="{{ url_for('delivery_dashboard') }}">
+            <input type="hidden" name="order_id" value="{{ o.id }}">
+            <input type="text" name="otp" placeholder="Enter OTP to confirm delivery" required>
+            <button type="submit">Mark Delivered</button>
+          </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No orders assigned to you.</p>
+    {% endif %}
+  </div>
+</body>
+</html>

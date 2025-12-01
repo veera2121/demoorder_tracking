@@ -16,6 +16,7 @@
     .order-card { background: white; border: 1px solid #ddd; border-radius: 12px; padding: 15px; margin: 15px 0; box-shadow: rgba(0,0,0,0.05) 0px 2px 8px; }
     .item-list li { background: #f5f5f5; padding: 8px; border-radius: 6px; margin: 5px 0; font-size: 15px; }
     .total-price { font-weight: 700; font-size: 18px; margin-top: 8px; color: #ff5722; }
+    .otp { font-weight: 600; color: #1976d2; margin-top: 5px; font-size: 16px; }
     .muted { color: #777; margin-top: 20px; font-size: 16px; }
     @media (max-width: 600px) {
       .container { padding: 10px; }
@@ -66,16 +67,17 @@
             {% set p = item.price|float %}
             {% set subtotal = q * p %}
             <li>
-              {{ item.item_name }} — Qty: {{ q }} — Price: ₹{{ "%.2f"|format(p) }} —
-              Subtotal: ₹{{ "%.2f"|format(subtotal) }}
+              {{ item.item_name }} — Qty: {{ q }} — Price: ₹{{ "%.2f"|format(p) }} — Subtotal: ₹{{ "%.2f"|format(subtotal) }}
             </li>
           {% endfor %}
         </ul>
 
-        <!-- 🔥 FINAL FIX — TOTAL PRICE FROM BACKEND -->
         <p class="total-price">
           Total Price: ₹{{ "%.2f"|format(o.total_price()) }}
         </p>
+
+        <!-- 🔹 OTP DISPLAY -->
+        <p class="otp">Delivery OTP: {{ o.otp }}</p>
 
       </div>
       {% endfor %}
