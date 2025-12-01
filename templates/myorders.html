@@ -4,127 +4,32 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>My Orders</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
   <style>
-    body {
-      font-family: "Inter", sans-serif;
-      background: #f9fafb;
-      margin: 0;
-      padding: 0;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 15px;
-    }
-
-    h1, h2, h3 {
-      color: #333;
-    }
-
-    /* ---------- FORM ---------- */
-    .search-form {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 15px;
-    }
-
-    .search-form input {
-      flex: 1;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-
-    .search-form button {
-      padding: 12px 20px;
-      background: #ff5722;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: 0.2s;
-    }
-
-    .search-form button:hover {
-      background: #e64a19;
-    }
-
-    /* ---------- ORDER CARD ---------- */
-    .order-card {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      padding: 15px;
-      margin: 15px 0;
-      box-shadow: rgba(0,0,0,0.05) 0px 2px 8px;
-    }
-
-    .order-card h3 {
-      margin: 0 0 10px;
-    }
-
-    .order-card p {
-      margin: 6px 0;
-      color: #555;
-    }
-
-    /* ---------- ITEMS LIST ---------- */
-    .item-list {
-      padding-left: 18px;
-    }
-
-    .item-list li {
-      background: #f5f5f5;
-      padding: 8px;
-      border-radius: 6px;
-      margin: 5px 0;
-      font-size: 15px;
-    }
-
-    .muted {
-      color: #777;
-      margin-top: 20px;
-      font-size: 16px;
-    }
-
-    /* ---------- MOBILE VIEW FIXES ---------- */
+    body { font-family: "Inter", sans-serif; background: #f9fafb; margin: 0; padding: 0; }
+    .container { max-width: 900px; margin: 20px auto; padding: 15px; }
+    h1, h2, h3, h4 { color: #333; }
+    .search-form { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+    .search-form input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+    .search-form button { padding: 12px 20px; background: #ff5722; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.2s; }
+    .search-form button:hover { background: #e64a19; }
+    .order-card { background: white; border: 1px solid #ddd; border-radius: 12px; padding: 15px; margin: 15px 0; box-shadow: rgba(0,0,0,0.05) 0px 2px 8px; }
+    .item-list li { background: #f5f5f5; padding: 8px; border-radius: 6px; margin: 5px 0; font-size: 15px; }
+    .total-price { font-weight: 700; font-size: 18px; margin-top: 8px; color: #ff5722; }
+    .muted { color: #777; margin-top: 20px; font-size: 16px; }
     @media (max-width: 600px) {
-      .container {
-        padding: 10px;
-      }
-
-      .order-card {
-        padding: 12px;
-      }
-
-      .item-list li {
-        font-size: 14px;
-      }
-
-      h1 {
-        font-size: 24px;
-      }
-
-      .search-form {
-        flex-direction: column;
-      }
-
-      .search-form button {
-        width: 100%;
-      }
+      .container { padding: 10px; }
+      .order-card { padding: 12px; }
+      .item-list li { font-size: 14px; }
+      h1 { font-size: 24px; }
+      .search-form { flex-direction: column; }
+      .search-form button { width: 100%; }
     }
   </style>
 </head>
 
 <body>
   <div class="container">
-    
     <h1>Track Your Orders</h1>
 
     <!-- SEARCH FORM -->
@@ -140,7 +45,6 @@
       {% for o in orders %}
       <div class="order-card">
         <h3>Order ID: {{ o.order_id }}</h3>
-
         <p><strong>Status:</strong> {{ o.status }}</p>
         <p><strong>Placed At:</strong> {{ o.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
         <p><strong>Customer:</strong> {{ o.customer_name }} | {{ o.phone }} | {{ o.email }}</p>
@@ -149,9 +53,8 @@
         {% if o.latitude and o.longitude %}
         <p>
           <a href="https://www.google.com/maps?q={{ o.latitude }},{{ o.longitude }}" 
-             target="_blank" 
-             style="color:#ff5722;font-weight:600;">
-             View Location on Google Maps
+             target="_blank" style="color:#ff5722;font-weight:600;">
+            View Location on Google Maps
           </a>
         </p>
         {% endif %}
@@ -159,12 +62,21 @@
         <h4>Items Ordered:</h4>
         <ul class="item-list">
           {% for item in o.items %}
+            {% set q = item.quantity|int %}
+            {% set p = item.price|float %}
+            {% set subtotal = q * p %}
             <li>
-              {{ item.item_name }} — Qty: {{ item.quantity }}
-              — Price: ₹{{ item.price }}
+              {{ item.item_name }} — Qty: {{ q }} — Price: ₹{{ "%.2f"|format(p) }} —
+              Subtotal: ₹{{ "%.2f"|format(subtotal) }}
             </li>
           {% endfor %}
         </ul>
+
+        <!-- 🔥 FINAL FIX — TOTAL PRICE FROM BACKEND -->
+        <p class="total-price">
+          Total Price: ₹{{ "%.2f"|format(o.total_price()) }}
+        </p>
+
       </div>
       {% endfor %}
 
@@ -174,7 +86,6 @@
         <a href="{{ url_for('menu_page') }}">menu page</a>.
       </p>
     {% endif %}
-
   </div>
 </body>
 </html>
