@@ -16,6 +16,13 @@
   </style>
 </head>
 <body>
+  
+
+  <audio id="newOrderSound">
+    <source src="/static/sound.mp3" type="audio/mpeg">
+</audio>
+
+  
   <div class="container">
     <h1>Admin Dashboard</h1>
     <p><a href="{{ url_for('admin_logout') }}">Logout</a></p>
@@ -66,7 +73,9 @@
               <form method="POST" action="{{ url_for('update_status', order_db_id=o.id) }}">
                 <select name="status">
                   <option value="Pending" {% if o.status == 'Pending' %}selected{% endif %}>Pending</option>
+                   <option value="Accepted" {% if o.status == 'Accepted' %}selected{% endif %}>Accepted</option>
                   <option value="Processing" {% if o.status == 'Processing' %}selected{% endif %}>Processing</option>
+                   <option value="ontheway" {% if o.status == 'ontheway' %}selected{% endif %}>On the way</option>
                   <option value="Completed" {% if o.status == 'Completed' %}selected{% endif %}>Completed</option>
                   <option value="Cancelled" {% if o.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
                 </select>
@@ -81,5 +90,26 @@
       <p>No orders yet.</p>
     {% endif %}
   </div>
+
+
+  
+<script>
+function checkOrders() {
+    fetch('/check-new-orders')
+        .then(response => response.json())
+        .then(data => {
+            if (data.new) {
+                document.getElementById("newOrderSound").play();
+                alert("🔔 New Order Arrived!");
+                location.reload();  // auto refresh page to show order
+            }
+        });
+}
+
+// check every 5 seconds
+setInterval(checkOrders, 5000);
+</script>
+  
+  
 </body>
 </html>

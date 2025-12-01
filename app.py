@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from collections import defaultdict
+from flask import jsonify
 import os
 import requests
 
@@ -186,6 +187,22 @@ def update_status(order_db_id):
     order.status = new_status
     db.session.commit()
     return redirect(url_for("admin_dashboard"))
+
+
+last_seen_order_id = 0  # store globally or in session
+
+@app.route("/check-new-orders")
+def check_new_orders():
+    global last_seen_order_id
+
+    latest_order = Order.query.order_by(Order.id.desc()).first()
+
+    if latest_order and latest_order.id > last_seen_order_id:
+        last_seen_order_id = latest_order.id
+        return jsonify({"new": True})
+
+    return jsonify({"new": False})
+
 
 @app.route("/api/order_status/<order_id>", methods=["GET"])
 def api_order_status(order_id):
